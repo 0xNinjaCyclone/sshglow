@@ -8,10 +8,16 @@ we have access on , and execute command on if we want
 - sshglow uses built-in tools and libraries 
 
 # Enumerate
-`./sshglow.py -t TARGETS -c CREDS`
+```
+./sshglow.py -t TARGETS -c CREDS
+```
+
 ![](./preview1.png)
 
 # Exec commands
-`./sshglow.py -t TARGETS -c CREDS --no-replicate -e COMMAND`
+```
+./sshglow.py -t TARGETS -c CREDS --no-replicate -e COMMAND
+```
+
 ![](./preview2.png)
 
