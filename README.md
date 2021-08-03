@@ -1,6 +1,6 @@
 # About sshglow
 ssh glow is an enumeration and lateral movement tool in linux environments to find the servers which
-we access on , and execute command on if we want 
+we have access on , and execute command on if we want 
 
 # Main Features
 - handle cidr or range separated by - or particular targets separated by , or one target
@@ -9,9 +9,9 @@ we access on , and execute command on if we want
 
 # Enumerate
 `./sshglow.py -t TARGETS -c CREDS`
-![](./preview1.jpg)
+![](./preview1.png)
 
 # Exec commands
 `./sshglow.py -t TARGETS -c CREDS --no-replicate -e COMMAND`
-![](./preview2.jpg)
+![](./preview2.png)
 
