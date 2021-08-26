@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import sys
 import pty
 import socket
 import time
@@ -41,7 +42,7 @@ def banner():
 ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝  ╚══╝╚══╝                                                                
 """ 
     print(Color.Red + banner.replace('\n','\n\t\t\t'))
-    print(f"\t\t\t{Color.Blue} Author  ->  Abdallah Mohamed Elsharif{Color.White}\n\n")
+    print(f"\t\t\t{Color.Blue} Author  ->  {AUTHOR}{Color.White},  {Color.Green}Version  ->  {VERSION}{Color.White}\n\n")
 
 def ssh_connector(login,passwd,cmd):
     pid, fd = pty.fork()
@@ -71,12 +72,13 @@ def ssh_connector(login,passwd,cmd):
             if b'Permission denied,' in data or b'password:' in data:
                 failed = True
                 break
+
             output.append(data.decode('utf-8'))
         except:
             break
     
     if not failed:
-        pid , status = os.waitpid(pid, 0)
+        pid , status = os.waitpid(pid, os.WNOHANG)
         return status,''.join(output)
     else:
         return -1 , ""
@@ -104,7 +106,11 @@ def handle_targets(targets):
             targets.append(f"{octs[0]}.{octs[1]}.{octs[2]}.{str(oct)}")
 
     elif '/' in targets:
-        targets = [str(ip) for ip in IPv4Network(targets)]
+        try:
+            targets = [str(ip) for ip in IPv4Network(targets)]
+        except ValueError as err:
+            print(f"{Color.Red}[!]{Color.White} {err}")
+            sys.exit(1)
 
     else:
         targets = [targets]

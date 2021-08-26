@@ -1,0 +1,84 @@
+name: SSHGlowExec
+authors:
+  - '@abdallah_elsharif'
+description: This module will send an launcher or commands via ssh on multiple targets.
+software: ''
+techniques:
+  - T1021
+background: true
+output_extension: ''
+needs_admin: false
+opsec_safe: true
+language: python
+min_language_version: '2.6'
+comments:
+  - https://github.com/abdallah-elsharif/sshglow
+options:
+  - name: Agent
+    description: Agent to use ssh from.
+    required: true
+    value: ''
+  - name: Language
+    description: Language of the stager to generate.
+    required: true
+    value: 'python'
+  - name: Targets
+    description: Target to scan in single or (Attacker)File or Range ex(192.168.1.1-10) or CIDR format
+    required: true
+    value: ''
+  - name: Creds
+    description: (Attacker)File or user1:pass1,user2:pass2 or only one
+    required: true
+    value: ''
+  - name: noReplicate
+    description: Don't Replicate execution using multiple users
+    required: true
+    value: 'True'
+  - name: Delay
+    description: Delay interval in seconds
+    required: true
+    value: '5'
+  - name: Command
+    description: Command to execute.
+    required: false
+    value: ''
+  - name: Listener
+    description: Listener to use.
+    required: false
+    value: ''
+  - name: SafeChecks
+    description: Switch. Checks for LittleSnitch or a SandBox, exit the staging process
+      if true. Defaults to True.
+    required: true
+    value: 'True'
+  - name: UserAgent
+    description: User-agent string to use for the staging request (default, none, or
+      other).
+    required: false
+    value: default
+  - name: Proxy
+    description: Proxy to use for request (default, none, or other).
+    required: false
+    value: default
+  - name: ProxyCreds
+    description: Proxy credentials ([domain\]username:password) to use for request (default,none, or other).
+    required: false
+    value: default
+  - name: Obfuscate
+    description: Switch. Obfuscate the launcher powershell code, uses the ObfuscateCommand
+      for obfuscation types. For powershell only.
+    required: false
+    value: 'False'
+  - name: ObfuscateCommand
+    description: The Invoke-Obfuscation command to use. Only used if Obfuscate switch
+      is True. For powershell only.
+    required: false
+    value: Token\All\1
+  - name: Bypasses
+    description: Bypasses as a space separated list to be prepended to the launcher.
+    required: false
+    value: 'mattifestation etw'
+
+
+advanced:
+  custom_generate: true
