@@ -60,7 +60,7 @@ class MetasploitModule < Msf::Exploit::Remote
 
         register_advanced_options(
             [
-                OptBool.new('noDuplicate', [ true, 'Don\'t Duplicate execution using multiple users', true ]),
+                OptBool.new('noDuplicate', [ true, 'Don\'t Duplicate execution when using multiple users', true ]),
                 OptBool.new('PSH-AmsiBypass', [ true, 'PSH - Request AMSI/SBL bypass before the stager', true ]),
                 OptString.new('PSH-AmsiBypassURI', [ false, 'PSH - The URL to use for the AMSI/SBL bypass (Will be random if left blank)', '' ]),
                 OptString.new('Py-StagerURI', [ false, 'Py - The URL to use for the first stage (Will be random if left blank)', '' ]),
