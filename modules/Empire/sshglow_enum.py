@@ -6,7 +6,6 @@ from typing import Dict
 from os.path import isfile
 
 from empire.server.common.module_models import PydanticModule
-from empire.server.utils.module_util import handle_error_message
 
 
 class Module(object):
