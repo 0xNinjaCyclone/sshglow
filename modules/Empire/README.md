@@ -12,7 +12,7 @@ should be python3 installed already
 
 ## setup and run
 ```
-cp sshglow_enum.yaml [%Empire PATH%]/empire/server/modules/python/situational_awareness/network/
+cp sshglow_enum.* [%Empire PATH%]/empire/server/modules/python/situational_awareness/network/
 cp sshglow_exec.* [%Empire PATH%]/empire/server/modules/python/lateral_movement/multi/
 ```
 
