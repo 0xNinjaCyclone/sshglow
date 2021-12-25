@@ -28,7 +28,7 @@ def register_options():
             help="Enter creds on or more separated by , ex(user:pass or user2:pass2,user2:pass2) or file with same expression")
     parser.add_option("-d","--delay",dest="delay",help="delay interval in seconds (default 0.5)",default="0.5")
     parser.add_option("-e","--exec",dest="exec",help="Execute command on all machines which you have access on")
-    parser.add_option("-r","--no-replicate",action="store_true",dest="replicate",help="Don't replicate execution using multiple users")
+    parser.add_option("-r","--no-duplicate",action="store_true",dest="duplicate",help="Don't duplicate execution when using multiple users")
     options , _ = parser.parse_args()
     return options
 
@@ -127,7 +127,7 @@ def display_ssh_servers(hosts):
 
     print()
 
-def run(targets,credentials,delay,no_replicate = False,cmd = None):
+def run(targets,credentials,delay,no_duplicate = False,cmd = None):
     execute = DefaultCommandExecution if not cmd else cmd
     targets = handle_targets(targets)
     credentials = handle_credentials(credentials)
@@ -149,12 +149,12 @@ def run(targets,credentials,delay,no_replicate = False,cmd = None):
                 print(f"\n\t\t{Color.Red}Please enter valid credentials ex(user:password) \"{c}\" is not valid{Color.White}\n")
                 return
             
-            if no_replicate and len(outputs) > 0:
+            if no_duplicate and len(outputs) > 0:
                 execute = DefaultCommandExecution
 
             user , passwd = c.split(':')
             status , output = ssh_connector(f"{user}@{target}",passwd,execute)
-            if status != -1 and not (no_replicate and len(outputs) > 0):
+            if status != -1 and not (no_duplicate and len(outputs) > 0):
                 outputs[c] = output
 
             elif status != -1:
@@ -180,10 +180,10 @@ def main():
     
     if options.targets and options.creds:
         if options.exec:
-            run(options.targets,options.creds,float(options.delay),options.replicate,options.exec)
+            run(options.targets,options.creds,float(options.delay),options.duplicate,options.exec)
 
         else:
-            run(options.targets,options.creds,float(options.delay),options.replicate)
+            run(options.targets,options.creds,float(options.delay),options.duplicate)
 
 
 if __name__ == '__main__':

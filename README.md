@@ -16,7 +16,7 @@ we have access on , and execute command on if we want
 
 # Exec commands
 ```
-./sshglow.py -t TARGETS -c CREDS --no-replicate -e COMMAND
+./sshglow.py -t TARGETS -c CREDS --no-duplicate -e COMMAND
 ```
 
 ![](./preview2.png)

