@@ -3,7 +3,7 @@
 - sshglow_exec module : To drop empire agent into accessible machines
 
 # About
-the modules will load SSHGlow in victim memory and call SSHGlow Functions 
+the modules will load SSHGlow in victim's memory and call SSHGlow Functions 
 that perform the tasks\
 SSHGlowExec module can execute only normal commands and can drop empire agent 
 into victim's network via python or powershell stagers therefore the module can
