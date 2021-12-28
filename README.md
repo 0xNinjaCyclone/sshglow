@@ -1,6 +1,6 @@
 # About
 SSHGlow is an enumeration and lateral movement tool in linux environments to find the servers which
-we have access on , and execute command on if we want 
+we have access on , and execute commands on if we want 
 
 # Main Features
 - handle cidr or range separated by - or particular targets separated by , or one target

@@ -1,12 +1,12 @@
 # Empire modules
-1 - sshglow_enum module : for enumeration
-2 - sshglow_exec module : for drop empire agent into accessible machines
+- sshglow_enum module : For enumeration
+- sshglow_exec module : To drop empire agent into accessible machines
 
 # About
 the modules will load SSHGlow in victim memory and call SSHGlow Functions 
-that perform the tasks
+that perform the tasks\
 SSHGlowExec module can execute only normal commands and can drop empire agent 
-in victim network over python or powershell stagers for that the module can
+into victim's network via python or powershell stagers therefore the module can
 targeting windows and linux and mac but the machine which load SSHGlow
 should be python3 installed already 
 
@@ -35,13 +35,14 @@ cp sshglow_exec.* [%Empire PATH%]/empire/server/modules/python/lateral_movement/
 ├─────────┼───────┼──────────┼─────────────────────────────────────┤
 │ Agent   │       │ True     │ Agent to use ssh from.              │
 ├─────────┼───────┼──────────┼─────────────────────────────────────┤
-│ Creds   │       │ True     │ (Victim)File or                     │
+│ Creds   │       │ True     │ (Attacker)File or                   │
 │         │       │          │ user1:pass1,user2:pass2 or only one │
 ├─────────┼───────┼──────────┼─────────────────────────────────────┤
 │ Delay   │ 5     │ True     │ Delay interval in seconds           │
 ├─────────┼───────┼──────────┼─────────────────────────────────────┤
-│ Targets │       │ True     │ CIDR or Range ex(192.168.1.1-10) or │
-│         │       │          │ only one                            │
+│ Targets │       │ True     │ target to scan in single or Range   │
+│         │       │          │ ex(192.168.1.1-10) or CIDR format   │
+│         │       │          │ or (Attacker)File                   │
 └─────────┴───────┴──────────┴─────────────────────────────────────┘
 
 
