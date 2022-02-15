@@ -19,13 +19,21 @@ options:
     required: true
     value: ''
   - name: Targets
-    description: target to scan in single or Range ex(192.168.1.1-10) or CIDR format or (Attacker)File
+    description: Target to scan in single or Range ex(192.168.1.1-10) or CIDR format or (Attacker)File
     required: true
     value: ''
+  - name: Proto
+    description: Target protocol supportd protocols [ssh]
+    required: true
+    value: 'ssh'
   - name: Creds
     description: (Attacker)File or user1:pass1,user2:pass2 or only one
     required: true
     value: ''
+  - name: Port
+    description: The target port
+    required: true
+    value: '22'
   - name: Delay
     description: Delay interval in seconds
     required: true

