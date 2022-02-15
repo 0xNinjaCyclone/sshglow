@@ -8,9 +8,10 @@ import time
 from ipaddress import IPv4Network
 from optparse import OptionParser
 
+
 AUTHOR  = "Abdallah Mohamed Elsharif"
-VERSION = "1.0"
-DefaultCommandExecution = "whoami"
+VERSION = "1.1"
+
 
 class Color:
     Red     = "\033[0;31m"
@@ -18,17 +19,53 @@ class Color:
     Green   = "\033[0;32m"
     White   = "\033[0;37m"
     Blue    = "\033[0;34m"
+    Bold    = "\033[1m"
+    NC      = "\033[0m" # No Color
+
+
+class Print:
+
+    display = True
+
+
+    @classmethod
+    def normal(cls, text="", endl = "\n", startl = ""):
+        if Print.display:
+            print(f"{startl}{text}{Color.NC}", end=endl)
+
+    @classmethod
+    def special(cls, text="", endl = "\n", startl = ""):
+        if Print.display:
+            print(f"{startl}{Color.Bold}{text}{Color.NC}", end=endl)
+
+    @classmethod
+    def success(cls, text="", endl = "\n", startl = ""):
+        if Print.display:
+            print(f"{startl}{Color.Green}{text}{Color.NC}", end=endl)
+
+    @classmethod
+    def status(cls, text="", endl = "\n", startl = ""):
+        if Print.display:
+            print(f"{startl}{Color.Blue}{text}{Color.NC}", end=endl)
+
+    @classmethod
+    def fail(cls, text="", endl = "\n", startl = ""):
+        if Print.display:
+            print(f"{startl}{Color.Red}{text}{Color.NC}", end=endl)
 
 
 def register_options():
     parser = OptionParser(version=VERSION)
     parser.add_option('-t','--targets',dest='targets',
             help='Your Target (one ip or more separated by ,) or cidr or range ex(192.168.1.1-10)')
+    parser.add_option("-P","--protocol",dest="proto",help="Enter your target protocol supportd protocols [ssh] default (ssh)", default="ssh")
+    parser.add_option("-p","--port",dest="port",help="Enter the port of the protocol",type=int)
     parser.add_option("-c","--credentials",dest="creds",
             help="Enter creds on or more separated by , ex(user:pass or user2:pass2,user2:pass2) or file with same expression")
-    parser.add_option("-d","--delay",dest="delay",help="delay interval in seconds (default 0.5)",default="0.5")
+    parser.add_option("-d","--delay",dest="delay",help="delay interval in seconds (default 0.5)",type=float,default=0.5)
     parser.add_option("-e","--exec",dest="exec",help="Execute command on all machines which you have access on")
     parser.add_option("-r","--no-duplicate",action="store_true",dest="duplicate",help="Don't duplicate execution when using multiple users")
+    parser.add_option("-s","--silent",action="store_true",dest="silent",help="No output")
     options , _ = parser.parse_args()
     return options
 
@@ -41,57 +78,76 @@ def banner():
 ███████║███████║██║  ██║╚██████╔╝███████╗╚██████╔╝╚███╔███╔╝
 ╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝  ╚══╝╚══╝                                                                
 """ 
-    print(Color.Red + banner.replace('\n','\n\t\t\t'))
-    print(f"\t\t\t{Color.Blue} Author  ->  {AUTHOR}{Color.White},  {Color.Green}Version  ->  {VERSION}{Color.White}\n\n")
-
-def ssh_connector(login,passwd,cmd):
-    pid, fd = pty.fork()
-    if not pid:
-        os.execv("/usr/bin/ssh",["/usr/bin/ssh",login,"-o","StrictHostKeyChecking=no",cmd])
     
-    while True:
-        try:
-            output = os.read(fd, 1024).strip()
-        except:
-            break
+    Print.fail(banner.replace('\n','\n\t\t\t'))
+    Print.status(f"Author  ->  ", startl='\t\t\t', endl='')
+    Print.success(AUTHOR, endl=',\t')
+    Print.special(f"Version  ->  {VERSION}", endl='\n\n')
 
-        lower = output.lower()
-        if b'password:' in lower:
-            os.write(fd, (passwd + '\n').encode("utf-8"))
-            break
 
-        elif b'are you sure you want to continue connecting' in lower:
-            # Adding key to known_hosts
-            os.write(fd, b'yes\n')
+class IProto:
+    def __init__(self, port) -> None:
+        self.port = port
 
-    output = []
-    while True:
-        try:
-            data = os.read(fd, 1024).strip()
-            failed = False
-            if b'Permission denied,' in data or b'password:' in data:
-                failed = True
+    def connector(self, target, user, passwd, cmd):
+        pass
+
+
+class SSH(IProto):
+    def __init__(self, port = 22) -> None:
+        IProto.__init__(self, port)
+
+    def connector(self, target, user, passwd, cmd):
+        pid, fd = pty.fork()
+        if not pid:
+            os.execv("/usr/bin/ssh",["/usr/bin/ssh",f"{user}@{target}","-p",str(self.port),"-o","StrictHostKeyChecking=no",cmd])
+        
+        while True:
+            try:
+                output = os.read(fd, 1024).strip()
+            except:
                 break
 
-            output.append(data.decode('utf-8'))
-        except:
-            break
-    
-    if not failed:
-        pid , status = os.waitpid(pid, os.WNOHANG)
-        return status,''.join(output)
-    else:
-        return -1 , ""
+            lower = output.lower()
+            if b'password:' in lower:
+                os.write(fd, (passwd + '\n').encode("utf-8"))
+                break
 
-def find_ssh_servers(hosts):
+            elif b'are you sure you want to continue connecting' in lower:
+                # Adding key to known_hosts
+                os.write(fd, b'yes\n')
+
+        output = []
+
+        while True:
+            try:
+                data = os.read(fd, 1024).strip()
+                failed = False
+                if b'Permission denied,' in data or b'password:' in data:
+                    failed = True
+                    break
+
+                output.append(data.decode('utf-8'))
+            except:
+                break
+        
+        if not failed:
+            pid, _ = os.waitpid(pid, os.WNOHANG)
+            return True, ''.join(output)
+        else:
+            return False, ''
+
+
+def find_servers(hosts, port):
     servers = []
     for host in hosts:
         s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.settimeout(0.1)
-        if s.connect_ex((host,22)) == 0:
+        if s.connect_ex((host, port)) == 0:
             servers.append(host)
     
     return servers
+
 
 def handle_targets(targets):
     if ',' in targets:
@@ -109,81 +165,164 @@ def handle_targets(targets):
         try:
             targets = [str(ip) for ip in IPv4Network(targets)]
         except ValueError as err:
-            print(f"{Color.Red}[!]{Color.White} {err}")
+            Print.fail(err)
             sys.exit(1)
 
     else:
         targets = [targets]
 
-    return find_ssh_servers(targets)
+    return targets
+
 
 def handle_credentials(credentials):
     return credentials.split(',') if ',' in credentials else [credentials] if not os.path.isfile(credentials) else [line.strip() for line in open(credentials,'r').readlines()]
 
-def display_ssh_servers(hosts):
-    print("SSH SERVERS  :")
-    for host in hosts:
-        print(f"\t{Color.Green}{host}{Color.White}")
 
-    print()
+def display_servers(protoname, hosts):
+    Print.normal(f"{protoname} SERVERS  :")
 
-def run(targets,credentials,delay,no_duplicate = False,cmd = None):
-    execute = DefaultCommandExecution if not cmd else cmd
-    targets = handle_targets(targets)
+    if bool(hosts):
+        for host in hosts:
+            Print.success(host, startl='\t')
+
+    else:
+        Print.fail("No Servers available !!", startl='\t')
+
+
+def display_hostname(host):
+    Print.normal(f"\n{host}  :")
+    Print.status("HostName    :", startl='\t', endl='\t')
+    
+    try:
+        Print.success(socket.gethostbyaddr(host)[0])
+    except socket.herror:
+        Print.fail("UNKNOWN")
+
+
+def display_access(node):
+    Print.status("Access      :", startl='\t', endl='')
+
+    if node["access"]:
+        Print.special(startl='\t', endl='')
+        for i in node["info"]:
+            user = i["user"]
+            passwd = i["pass"]
+            Print.special(f"{user}:{passwd}", endl='')
+
+            if i != node["info"][-1]:
+                Print.special(', ', endl='')
+    else:
+        Print.fail("No Access !!", startl='\t', endl='')
+
+    Print.special(endl='\n')
+
+
+def display_exec(info):
+    for i in info:
+        if i["exec"]:
+            user = i["user"]
+            cmd = i["cmd"]
+            output = i["output"]
+            Print.status(f"Exec ({user} # {Color.Yellow}{cmd}{Color.Blue})   :", startl='\n\t')
+            Print.success(output, startl='\t\t\t')
+
+
+def display(access):
+    for node in access:
+        display_hostname(node["target"])
+
+        display_access(node)
+
+        if node["access"]:
+            display_exec(node["info"])
+            
+        
+def get_proto(protoname, port = None):
+    pn = protoname.lower()
+
+    if pn == "ssh":
+        p = SSH
+
+    return p(port) if port else p()
+
+
+def run(targets, proto, credentials, delay, no_duplicate = False, cmd = None):
+    access = list()
+    defaultCommand = "whoami"
+    hosts = handle_targets(targets)
+    targets = find_servers(hosts, proto.port)
     credentials = handle_credentials(credentials)
-    display_ssh_servers(targets)
+    display_servers(proto.__class__.__name__, targets)
+
     for target in targets:
         time.sleep(delay)
-        print(f"\n{target} :")
-        print(f"{Color.Blue}\tHostName    :\t",end='')
-        try:
-            host = f"{Color.Green}{socket.gethostbyaddr(target)[0]}"
-        except socket.herror:
-            host = f"{Color.Red}UNKNOWN"
 
-        print(f"{host}")
-        print(f"\t{Color.Blue}Access      :{Color.White}",end='')
-        outputs = {}
+        accessInfo = dict()
+        accessInfo['target'] = target
+        accessInfo['execute'] = cmd != None
+        accessInfo['access'] = False
+        accessInfo['info'] = list()
+
+        # Use default command in execution if user does not pass any commands
+        execute = defaultCommand if not cmd else cmd
+
         for c in credentials:
             if ':' not in c:
-                print(f"\n\t\t{Color.Red}Please enter valid credentials ex(user:password) \"{c}\" is not valid{Color.White}\n")
-                return
+                Print.fail(f"Please enter valid credentials ex(user:password) \"{c}\" is not valid", startl='\t')
+                continue
             
-            if no_duplicate and len(outputs) > 0:
-                execute = DefaultCommandExecution
+
+            # If execution was disabled we should use default command 
+            if not accessInfo['execute'] and execute != defaultCommand:
+                execute = defaultCommand
 
             user , passwd = c.split(':')
-            status , output = ssh_connector(f"{user}@{target}",passwd,execute)
-            if status != -1 and not (no_duplicate and len(outputs) > 0):
-                outputs[c] = output
+            valid , output = proto.connector(target, user, passwd, execute)
 
-            elif status != -1:
-                outputs[c] = ""
+            # If we get valid access
+            if valid:
+                accessInfo["access"] = True
 
-        if len(outputs) == 0 :
-            print(f"\t{Color.Red}No Access !!{Color.White}")
+                info = {
+                    "user": user,
+                    "pass": passwd,
+                    "exec": accessInfo["execute"],
+                }
 
-        else:
-            print(f"{Color.Green}\t{', '.join(outputs.keys())}{Color.White}")
-            if cmd:
-                for key in outputs:
-                    output = outputs.get(key).replace('\n','\n\t\t\t')
-                    if len(output) > 0:
-                        print(f"\t{Color.Blue}Exec ({key.split(':')[0]} # {Color.Yellow}{cmd}{Color.Blue})   :\n\t\t\t{Color.Green}{output}{Color.White}\n")
-            
-            outputs.clear()
-            execute = cmd
+                if info["exec"]:
+                    info["cmd"] = cmd
+                    info["output"] = output
+
+
+                accessInfo["info"].append(info)
+
+                # If no_duplicate option was enabled and we get valid access we should disable execution for the another users
+                if no_duplicate:
+                    accessInfo["execute"] = False
+
+
+        access.append(accessInfo)
+
+
+    display(access)
+
 
 def main():
-    banner()
     options = register_options()
+
+    if options.silent: # No output
+        Print.display = False
+
+    banner()
     
     if options.targets and options.creds:
+        o = get_proto(options.proto, options.port)
+        
         if options.exec:
-            run(options.targets,options.creds,float(options.delay),options.duplicate,options.exec)
+            run(options.targets, o, options.creds, options.delay, options.duplicate, options.exec)
 
         else:
-            run(options.targets,options.creds,float(options.delay),options.duplicate)
+            run(options.targets, o, options.creds, options.delay, options.duplicate)
 
 
 if __name__ == '__main__':
