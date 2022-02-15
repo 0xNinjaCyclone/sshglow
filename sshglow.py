@@ -17,7 +17,6 @@ class Color:
     Red     = "\033[0;31m"
     Yellow  = "\033[0;33m"
     Green   = "\033[0;32m"
-    White   = "\033[0;37m"
     Blue    = "\033[0;34m"
     Bold    = "\033[1m"
     NC      = "\033[0m" # No Color
@@ -68,6 +67,7 @@ def register_options():
     parser.add_option("-s","--silent",action="store_true",dest="silent",help="No output")
     options , _ = parser.parse_args()
     return options
+
 
 def banner():
     banner = """
@@ -219,12 +219,11 @@ def display_access(node):
 
 def display_exec(info):
     for i in info:
-        if i["exec"]:
+        if i["exec"] and i["output"]:
             user = i["user"]
             cmd = i["cmd"]
-            output = i["output"]
             Print.status(f"Exec ({user} # {Color.Yellow}{cmd}{Color.Blue})   :", startl='\n\t')
-            Print.success(output, startl='\t\t\t')
+            Print.success(i["output"], startl='\t\t\t')
 
 
 def display(access):
@@ -268,7 +267,7 @@ def run(targets, proto, credentials, delay, no_duplicate = False, cmd = None):
 
         for c in credentials:
             if ':' not in c:
-                Print.fail(f"Please enter valid credentials ex(user:password) \"{c}\" is not valid", startl='\t')
+                Print.fail(f"Please enter valid credentials ex(user:password) \"{c}\" is not valid", startl='\n\t')
                 continue
             
 
