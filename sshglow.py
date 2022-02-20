@@ -242,6 +242,9 @@ def get_proto(protoname, port = None):
     if pn == "ssh":
         p = SSH
 
+    else: 
+        raise TypeError(f"{protoname} is unexpected !!")
+
     return p(port) if port else p()
 
 
@@ -315,13 +318,11 @@ def main():
     banner()
     
     if options.targets and options.creds:
-        o = get_proto(options.proto, options.port)
+        try:
+            run(options.targets, get_proto(options.proto, options.port), options.creds, options.delay, options.duplicate, options.exec)
+        except BaseException as e:
+            Print.fail(e)
         
-        if options.exec:
-            run(options.targets, o, options.creds, options.delay, options.duplicate, options.exec)
-
-        else:
-            run(options.targets, o, options.creds, options.delay, options.duplicate)
 
 
 if __name__ == '__main__':
