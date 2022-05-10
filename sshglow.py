@@ -53,6 +53,61 @@ class Print:
             print(f"{startl}{Color.Red}{text}{Color.NC}", end=endl)
 
 
+class IProto:
+    def __init__(self, port) -> None:
+        self.port = port
+
+    def connector(self, target, user, passwd, cmd):
+        pass
+
+
+class SSH(IProto):
+    def __init__(self, port = 22) -> None:
+        IProto.__init__(self, port)
+
+    def connector(self, target, user, passwd, cmd):
+        failed = False
+        pid, fd = pty.fork()
+
+        if not pid:
+            os.execv("/usr/bin/ssh",["/usr/bin/ssh",f"{user}@{target}","-p",str(self.port),"-o","StrictHostKeyChecking=no",cmd])
+        
+        while True:
+            try:
+                output = os.read(fd, 1024).strip()
+            except:
+                failed = True
+                break
+
+            lower = output.lower()
+            if b'password:' in lower:
+                os.write(fd, (passwd + '\n').encode("utf-8"))
+                break
+
+            elif b'are you sure you want to continue connecting' in lower:
+                # Adding key to known_hosts
+                os.write(fd, b'yes\n')
+
+        output = []
+
+        while True:
+            try:
+                data = os.read(fd, 1024).strip()
+                if b'Permission denied,' in data or b'password:' in data:
+                    failed = True
+                    break
+
+                output.append(data.decode('utf-8'))
+            except:
+                break
+        
+        if not failed:
+            pid, _ = os.waitpid(pid, os.WNOHANG)
+            return True, ''.join(output)
+        else:
+            return False, ''
+
+
 def register_options():
     parser = OptionParser(version=VERSION)
     parser.add_option('-t','--targets',dest='targets',
@@ -85,59 +140,6 @@ def banner():
     Print.special(f"Version  ->  {VERSION}", endl='\n\n')
 
 
-class IProto:
-    def __init__(self, port) -> None:
-        self.port = port
-
-    def connector(self, target, user, passwd, cmd):
-        pass
-
-
-class SSH(IProto):
-    def __init__(self, port = 22) -> None:
-        IProto.__init__(self, port)
-
-    def connector(self, target, user, passwd, cmd):
-        pid, fd = pty.fork()
-        if not pid:
-            os.execv("/usr/bin/ssh",["/usr/bin/ssh",f"{user}@{target}","-p",str(self.port),"-o","StrictHostKeyChecking=no",cmd])
-        
-        while True:
-            try:
-                output = os.read(fd, 1024).strip()
-            except:
-                break
-
-            lower = output.lower()
-            if b'password:' in lower:
-                os.write(fd, (passwd + '\n').encode("utf-8"))
-                break
-
-            elif b'are you sure you want to continue connecting' in lower:
-                # Adding key to known_hosts
-                os.write(fd, b'yes\n')
-
-        output = []
-
-        while True:
-            try:
-                data = os.read(fd, 1024).strip()
-                failed = False
-                if b'Permission denied,' in data or b'password:' in data:
-                    failed = True
-                    break
-
-                output.append(data.decode('utf-8'))
-            except:
-                break
-        
-        if not failed:
-            pid, _ = os.waitpid(pid, os.WNOHANG)
-            return True, ''.join(output)
-        else:
-            return False, ''
-
-
 def find_servers(hosts, port):
     servers = []
     for host in hosts:
@@ -162,11 +164,7 @@ def handle_targets(targets):
             targets.append(f"{octs[0]}.{octs[1]}.{octs[2]}.{str(oct)}")
 
     elif '/' in targets:
-        try:
-            targets = [str(ip) for ip in IPv4Network(targets)]
-        except ValueError as err:
-            Print.fail(err)
-            sys.exit(1)
+        targets = [str(ip) for ip in IPv4Network(targets)]
 
     else:
         targets = [targets]
